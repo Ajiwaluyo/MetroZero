@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metro Zero: From Zero to Impact</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#050505;
+    --fg:#F3F3EE;
+    --muted:#84847C;
+    --line:#1B1B1A;
+    --accent:#F3F3EE;
+    --accent-dim:rgba(243,243,238,0.14);
+    --fs-hero: clamp(3.4rem, 12.5vw, 9.5rem);
+    --fs-section: clamp(2.4rem, 7.6vw, 5.6rem);
+    --fs-body: clamp(1rem, 0.85rem + 0.6vw, 1.15rem);
+    --gutter: clamp(1.25rem, 5vw, 3.5rem);
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  html{
+    background:var(--bg);
+    scroll-behavior:smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+  }
+
+  body{
+    background:var(--bg);
+    color:var(--fg);
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:400;
+    overflow-x:hidden;
+    position:relative;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  ::selection{
+    background:var(--accent);
+    color:#050505;
+  }
+
+  a{ color:inherit; }
+
+  /* ---------- grain / noise overlay ---------- */
+  .noise-overlay{
+    position:fixed;
+    inset:0;
+    z-index:80;
+    pointer-events:none;
+    opacity:0.05;
+    mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    animation:grainShift 8s steps(8) infinite;
+  }
+  @keyframes grainShift{
+    0%{ transform:translate(0,0); }
+    12.5%{ transform:translate(-2%,2%); }
+    25%{ transform:translate(2%,-1%); }
+    37.5%{ transform:translate(-1%,-2%); }
+    50%{ transform:translate(2%,2%); }
+    62.5%{ transform:translate(-2%,1%); }
+    75%{ transform:translate(1%,-2%); }
+    87.5%{ transform:translate(-1%,1%); }
+    100%{ transform:translate(0,0); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .noise-overlay{ animation:none; }
+  }
+
+  .vignette{
+    position:fixed;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+    background:radial-gradient(ellipse at 50% 30%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 100%);
+  }
+
+  /* ---------- utility ---------- */
+  .eyebrow{
+    display:inline-block;
+    font-size:0.72rem;
+    letter-spacing:0.32em;
+    text-transform:uppercase;
+    color:var(--accent);
+    font-weight:500;
+  }
+  .eyebrow-muted{
+    color:var(--muted);
+    margin-bottom:0.75rem;
+  }
+
+  .reveal{
+    opacity:0;
+    transform:translateY(28px);
+    transition:opacity 0.9s cubic-bezier(.16,.84,.44,1), transform 0.9s cubic-bezier(.16,.84,.44,1);
+  }
+  .reveal.in-view{
+    opacity:1;
+    transform:translateY(0);
+  }
+  @media (prefers-reduced-motion: reduce){
+    .reveal{ opacity:1; transform:none; transition:none; }
+  }
+
+  .hairline{
+    border:none;
+    border-top:1px solid var(--line);
+    width:100%;
+  }
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;
+    min-height:100svh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:flex-start;
+    padding:clamp(6rem,12vh,8rem) var(--gutter) 4rem;
+    text-align:left;
+    isolation:isolate;
+  }
+
+  .hero-glow{
+    position:absolute;
+    top:38%;
+    left:50%;
+    width:min(70vw,900px);
+    height:min(70vw,900px);
+    transform:translate(-50%,-50%);
+    background:radial-gradient(circle, var(--accent-dim) 0%, rgba(243,243,238,0) 68%);
+    z-index:-1;
+    pointer-events:none;
+  }
+
+  .hero-inner{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    width:100%;
+    max-width:1100px;
+  }
+
+  .mz-stage{
+    position:relative;
+    width:100%;
+    max-width:820px;
+    height:clamp(220px,42vh,440px);
+    margin:1.75rem 0 0.5rem;
+  }
+  #mz-canvas{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+
+  .headline{
+    font-family:'Anton', sans-serif;
+    font-weight:400;
+    text-transform:uppercase;
+    font-size:var(--fs-hero);
+    line-height:0.88;
+    letter-spacing:-0.01em;
+    margin-top:0.25rem;
+  }
+  .headline .accent-word{
+    color:var(--accent);
+  }
+
+  .subtitle{
+    margin-top:1.75rem;
+    max-width:36ch;
+    font-size:var(--fs-body);
+    line-height:1.55;
+    color:var(--muted);
+    font-weight:300;
+  }
+
+  /* ---------- section shared ---------- */
+  section{
+    position:relative;
+    padding:clamp(5rem,14vh,9rem) var(--gutter);
+  }
+
+  .section-head{
+    max-width:1200px;
+    margin:0 auto;
+  }
+  .section-heading{
+    font-family:'Anton', sans-serif;
+    font-weight:400;
+    text-transform:uppercase;
+    font-size:var(--fs-section);
+    line-height:0.94;
+    letter-spacing:-0.01em;
+    margin-top:1.1rem;
+    max-width:16ch;
+  }
+
+  /* ---------- services ---------- */
+  .services{
+    border-top:1px solid var(--line);
+  }
+
+  .service-list{
+    max-width:1200px;
+    margin:clamp(3.5rem,8vh,5.5rem) auto 0;
+  }
+
+  .service-row{
+    border-top:1px solid var(--line);
+    display:grid;
+    grid-template-columns:1fr;
+    gap:0.6rem 2.5rem;
+    padding:2.1rem 0;
+    transition:padding-left 0.5s cubic-bezier(.16,.84,.44,1), border-color 0.4s ease;
+  }
+  .service-list .service-row:last-child{
+    border-bottom:1px solid var(--line);
+  }
+
+  .service-index{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:0.85rem;
+    letter-spacing:0.08em;
+    color:var(--muted);
+    transition:color 0.4s ease;
+  }
+  .service-title{
+    font-family:'Anton', sans-serif;
+    font-weight:400;
+    text-transform:uppercase;
+    font-size:clamp(1.7rem,4.4vw,2.6rem);
+    letter-spacing:-0.005em;
+    line-height:1.02;
+  }
+  .service-desc{
+    color:var(--muted);
+    font-weight:300;
+    line-height:1.6;
+    font-size:var(--fs-body);
+    max-width:52ch;
+  }
+
+  @media (min-width:760px){
+    .service-row{
+      grid-template-columns:96px 1.1fr 1.4fr;
+      align-items:start;
+    }
+  }
+
+  @media (hover:hover){
+    .service-row:hover{
+      padding-left:1.25rem;
+      border-color:#2a2a28;
+    }
+    .service-row:hover .service-index{ color:var(--accent); }
+  }
+
+  /* ---------- about ---------- */
+  .about{
+    border-top:1px solid var(--line);
+  }
+  .about-inner{
+    max-width:1200px;
+    margin:0 auto;
+  }
+  .about-copy{
+    margin-top:2.25rem;
+    max-width:56ch;
+    font-size:clamp(1.05rem,1.6vw,1.3rem);
+    line-height:1.65;
+    color:var(--muted);
+    font-weight:300;
+  }
+  .about-copy .fg-word{
+    color:var(--fg);
+    font-weight:400;
+  }
+
+  .about-rule{
+    margin-top:3.5rem;
+    max-width:1200px;
+    margin-left:auto;
+    margin-right:auto;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:1rem;
+    padding-top:1.75rem;
+    border-top:1px solid var(--line);
+  }
+  .about-rule span{
+    font-size:0.72rem;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+
+  /* ---------- footer ---------- */
+  .site-footer{
+    border-top:1px solid var(--line);
+    padding:clamp(2.5rem,6vh,3.5rem) var(--gutter);
+    display:flex;
+    flex-direction:column;
+    gap:0.75rem;
+  }
+  .footer-mark{
+    font-family:'Anton', sans-serif;
+    text-transform:uppercase;
+    font-size:clamp(1.6rem,4vw,2.2rem);
+    letter-spacing:-0.01em;
+  }
+  .footer-meta{
+    font-size:0.78rem;
+    letter-spacing:0.05em;
+    color:var(--muted);
+    font-weight:300;
+  }
+
+  @media (min-width:760px){
+    .site-footer{
+      flex-direction:row;
+      justify-content:space-between;
+      align-items:flex-end;
+    }
+  }
+
+  /* ---------- top nav / let's talk ---------- */
+  .site-nav{
+    position:fixed;
+    top:0;
+    right:0;
+    z-index:60;
+    padding:clamp(1.5rem,4vh,2.25rem) var(--gutter);
+  }
+
+  .talk-btn{
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+    gap:0.75rem;
+    background-color:rgba(5,5,5,0.55);
+    border:1px solid var(--line);
+    color:var(--fg);
+    font-family:'Space Grotesk', sans-serif;
+    font-size:0.82rem;
+    font-weight:500;
+    letter-spacing:0.01em;
+    padding:0.5rem 0.5rem 0.5rem 1.15rem;
+    border-radius:3px;
+    cursor:pointer;
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+    overflow:hidden;
+    isolation:isolate;
+    transition:border-color 0.4s ease, color 0.45s ease;
+  }
+  .talk-btn::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:var(--fg);
+    transform:translateY(102%);
+    transition:transform 0.45s cubic-bezier(.65,0,.35,1);
+    z-index:-1;
+  }
+  .talk-btn:hover{
+    color:var(--bg);
+    border-color:var(--fg);
+  }
+  .talk-btn:hover::before{
+    transform:translateY(0);
+  }
+  .talk-btn-arrow{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:28px;
+    height:28px;
+    flex-shrink:0;
+    border-radius:2px;
+    background:rgba(243,243,238,0.08);
+    transition:transform 0.45s cubic-bezier(.65,0,.35,1), background-color 0.4s ease;
+  }
+  .talk-btn-arrow svg{
+    width:13px;
+    height:13px;
+    display:block;
+  }
+  .talk-btn:hover .talk-btn-arrow{
+    transform:rotate(45deg);
+    background:transparent;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .talk-btn-arrow{ transition:background-color 0.4s ease; }
+    .talk-btn:hover .talk-btn-arrow{ transform:none; }
+  }
+
+  /* ---------- talk modal ---------- */
+  .talk-modal{
+    position:fixed;
+    inset:0;
+    z-index:90;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:var(--gutter);
+    background:rgba(5,5,5,0.78);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    opacity:0;
+    visibility:hidden;
+    transition:opacity 0.45s ease, visibility 0.45s ease;
+  }
+  .talk-modal.is-open{
+    opacity:1;
+    visibility:visible;
+  }
+
+  .talk-panel{
+    position:relative;
+    width:100%;
+    max-width:620px;
+    max-height:88vh;
+    overflow-y:auto;
+    background:#0a0a09;
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:clamp(2rem,5vw,3rem);
+    transform:translateY(24px) scale(0.98);
+    transition:transform 0.45s cubic-bezier(.16,.84,.44,1);
+  }
+  .talk-modal.is-open .talk-panel{
+    transform:translateY(0) scale(1);
+  }
+
+  .talk-close{
+    position:absolute;
+    top:1.5rem;
+    right:1.5rem;
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--fg);
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    cursor:pointer;
+    font-size:1.1rem;
+    line-height:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:border-color 0.3s ease, transform 0.3s ease;
+  }
+  .talk-close:hover{
+    border-color:var(--fg);
+    transform:rotate(90deg);
+  }
+
+  .talk-heading{
+    font-family:'Anton', sans-serif;
+    font-weight:400;
+    text-transform:uppercase;
+    font-size:clamp(1.8rem,4.4vw,2.6rem);
+    line-height:1;
+    margin-top:0.75rem;
+    max-width:18ch;
+  }
+  .talk-sub{
+    margin-top:1rem;
+    color:var(--muted);
+    font-weight:300;
+    font-size:0.95rem;
+    line-height:1.6;
+    max-width:42ch;
+  }
+
+  .talk-form{
+    margin-top:2.25rem;
+    display:flex;
+    flex-direction:column;
+    gap:1.4rem;
+  }
+  .talk-row{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:1.4rem;
+  }
+  @media (min-width:520px){
+    .talk-row{
+      grid-template-columns:1fr 1fr;
+    }
+  }
+
+  .talk-field{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+  }
+  .talk-field label{
+    font-size:0.68rem;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:0.6rem;
+  }
+  .talk-field input,
+  .talk-field textarea{
+    background:transparent;
+    border:none;
+    border-bottom:1px solid var(--line);
+    color:var(--fg);
+    font-family:'Space Grotesk', sans-serif;
+    font-size:1rem;
+    font-weight:400;
+    padding:0.55rem 0.1rem;
+    outline:none;
+    transition:border-color 0.3s ease;
+    resize:none;
+  }
+  .talk-field input::placeholder,
+  .talk-field textarea::placeholder{
+    color:#3d3d3a;
+    font-weight:300;
+  }
+  .talk-field input:focus,
+  .talk-field textarea:focus{
+    border-color:var(--fg);
+  }
+  .talk-field textarea{
+    min-height:96px;
+    line-height:1.5;
+  }
+
+  .talk-submit{
+    position:relative;
+    margin-top:0.5rem;
+    align-self:flex-start;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:0.6rem;
+    background:var(--fg);
+    color:#050505;
+    border:none;
+    border-radius:999px;
+    font-family:'Space Grotesk', sans-serif;
+    font-size:0.85rem;
+    font-weight:500;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    padding:0.85rem 1.75rem;
+    min-width:150px;
+    cursor:pointer;
+    transition:transform 0.3s ease, background-color 0.3s ease, opacity 0.3s ease;
+  }
+  .talk-submit:hover{
+    transform:translateY(-1px);
+    background-color:#fff;
+  }
+  .talk-submit-label{
+    display:inline-flex;
+    align-items:center;
+    gap:0.5rem;
+    transition:opacity 0.25s ease;
+  }
+  .talk-submit-label::after{
+    content:'';
+    width:12px;
+    height:12px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' fill='none'><path d='M1.5 12.5L12.5 1.5M12.5 1.5H4.5M12.5 1.5V9.5' stroke='%23050505' stroke-width='1.6' stroke-linecap='square'/></svg>");
+    background-size:contain;
+    background-repeat:no-repeat;
+    transition:transform 0.35s cubic-bezier(.65,0,.35,1);
+  }
+  .talk-submit:hover .talk-submit-label::after{
+    transform:translate(2px,-2px);
+  }
+  .talk-submit-spinner{
+    display:none;
+    width:15px;
+    height:15px;
+    border:2px solid rgba(5,5,5,0.22);
+    border-top-color:#050505;
+    border-radius:50%;
+    animation:talkSpin 0.65s linear infinite;
+  }
+  .talk-submit.is-loading{
+    cursor:default;
+    pointer-events:none;
+    background-color:#fff;
+  }
+  .talk-submit.is-loading .talk-submit-label{
+    opacity:0;
+    position:absolute;
+  }
+  .talk-submit.is-loading .talk-submit-spinner{
+    display:inline-block;
+  }
+  @keyframes talkSpin{
+    to{ transform:rotate(360deg); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .talk-submit-spinner{ animation:none; border-top-color:rgba(5,5,5,0.22); }
+  }
+
+  .talk-note{
+    margin-top:1.25rem;
+    font-size:0.82rem;
+    color:#7FDDA0;
+    font-weight:400;
+    display:none;
+    align-items:center;
+    gap:0.5rem;
+  }
+  .talk-note.is-visible{
+    display:flex;
+  }
+  .talk-note::before{
+    content:'';
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:#7FDDA0;
+    flex-shrink:0;
+    box-shadow:0 0 8px rgba(127,221,160,0.6);
+  }
+</style>
+</head>
+<body>
+
+<div class="vignette"></div>
+<div class="noise-overlay"></div>
+
+<nav class="site-nav">
+  <button type="button" class="talk-btn" id="talk-open-btn">
+    <span>Let's talk</span>
+    <span class="talk-btn-arrow" aria-hidden="true">
+      <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1.5 12.5L12.5 1.5M12.5 1.5H4.5M12.5 1.5V9.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="square" stroke-linejoin="miter"/>
+      </svg>
+    </span>
+  </button>
+</nav>
+
+<header class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-inner">
+    <div class="mz-stage">
+      <canvas id="mz-canvas" aria-label="Abstract particle rendering of the Metro Zero MZ mark" role="img"></canvas>
+    </div>
+    <span class="eyebrow eyebrow-muted reveal">METRO ZERO</span>
+    <h1 class="headline reveal">From zero<br>to <span class="accent-word">impact.</span></h1>
+    <p class="subtitle reveal">We help startups and enterprises turn ambitious ideas into AI‑powered software, intelligent systems, and digital products that scale.</p>
+  </div>
+</header>
+
+<section class="services" id="services">
+  <div class="section-head">
+    <span class="eyebrow reveal">WHAT WE BUILD</span>
+    <h2 class="section-heading reveal">AI, software, and digital products that actually ship.</h2>
+  </div>
+
+  <div class="service-list">
+    <article class="service-row reveal">
+      <span class="service-index">01</span>
+      <h3 class="service-title">AI‑Powered Solutions</h3>
+      <p class="service-desc">Custom AI agents, automated workflows, machine learning systems, and LLM integrations built for real‑world operations. We design end‑to‑end pipelines that take raw data and business logic and turn them into decision‑making systems your team can actually rely on. That means we're with you from model selection and fine‑tuning all the way through deployment, monitoring, and the continuous iteration a system needs once it's live in production.</p>
+    </article>
+    <article class="service-row reveal">
+      <span class="service-index">02</span>
+      <h3 class="service-title">Digital Product Development</h3>
+      <p class="service-desc">Web applications, mobile apps, SaaS platforms, and scalable software engineered for growth. Every product we ship is built on an architecture designed to hold up under real user load, evolving requirements, and long‑term maintenance, so what launches as an MVP can actually grow into infrastructure your business depends on, without a costly rebuild down the line.</p>
+    </article>
+    <article class="service-row reveal">
+      <span class="service-index">03</span>
+      <h3 class="service-title">Technical Strategy</h3>
+      <p class="service-desc">Architecture reviews, technical consulting, and product roadmaps for companies building with AI. We sit down with founders and engineering leads, stress test the systems already in place, and figure out where technical debt or scalability risk has been quietly piling up. From there we sketch out a roadmap that's actually pragmatic, one that balances how fast you need to ship with how stable things need to stay.</p>
+    </article>
+    <article class="service-row reveal">
+      <span class="service-index">04</span>
+      <h3 class="service-title">Design &amp; Experience</h3>
+      <p class="service-desc">Human‑centered interfaces designed to make advanced technology intuitive and useful. Even the most sophisticated AI system falls flat if people can't understand or trust it, so we spend real time on the details: interaction design, information hierarchy, and the small pieces of copy that turn something complex into something that just feels effortless to use every day.</p>
+    </article>
+  </div>
+</section>
+
+<section class="about" id="about">
+  <div class="about-inner">
+    <span class="eyebrow reveal">WHO WE ARE</span>
+    <h2 class="section-heading reveal">Creative technologists for intelligent products.</h2>
+    <p class="about-copy reveal">Metro Zero combines <span class="fg-word">software engineering</span>, <span class="fg-word">design</span>, and <span class="fg-word">artificial intelligence</span> to help companies transform bold ideas into products that create lasting impact. We build systems that move businesses forward. Our team lives at the intersection of technical craftsmanship and creative vision, pairing engineers, designers, and AI specialists on every project so every decision, from the underlying architecture down to the smallest interaction detail, gets made with both rigor and intention. We don't just deliver code. We partner with the teams we work with from the earliest strategy conversations all the way through to the moment a product is live and being used at scale, staying close to the outcomes that actually matter to their business.</p>
+  </div>
+  <div class="about-rule reveal">
+    <span>EST. METRO ZERO</span>
+    <span>SOFTWARE · AI · DESIGN</span>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <span class="footer-mark">METRO ZERO</span>
+  <span class="footer-meta">© 2026 Metro Zero. Studio for intelligent products.</span>
+</footer>
+
+<div class="talk-modal" id="talk-modal" role="dialog" aria-modal="true" aria-labelledby="talk-heading">
+  <div class="talk-panel">
+    <button type="button" class="talk-close" id="talk-close-btn" aria-label="Close">&times;</button>
+
+    <span class="eyebrow eyebrow-muted">SAY HELLO</span>
+    <h2 class="talk-heading" id="talk-heading">So, what are we building?</h2>
+    <p class="talk-sub">A few details and we're off. No sales calls, no forms within forms, just tell us what's on your mind and we'll reply from a real inbox, usually the next day.</p>
+
+    <form class="talk-form" id="talk-form" action="javascript:void(0);" onsubmit="return false;">
+      <div class="talk-row">
+        <div class="talk-field">
+          <label for="talk-first-name">First name</label>
+          <input type="text" id="talk-first-name" name="firstName" placeholder="Jane" autocomplete="given-name" required>
+        </div>
+        <div class="talk-field">
+          <label for="talk-last-name">Last name</label>
+          <input type="text" id="talk-last-name" name="lastName" placeholder="Doe" autocomplete="family-name" required>
+        </div>
+      </div>
+
+      <div class="talk-field">
+        <label for="talk-email">Email address</label>
+        <input type="email" id="talk-email" name="email" placeholder="jane@company.com" autocomplete="email" required>
+      </div>
+
+      <div class="talk-field">
+        <label for="talk-company">Company name</label>
+        <input type="text" id="talk-company" name="company" placeholder="Company Inc." autocomplete="organization">
+      </div>
+
+      <div class="talk-field">
+        <label for="talk-message">The short version</label>
+        <textarea id="talk-message" name="message" placeholder="What's the idea, and where are you stuck?"></textarea>
+      </div>
+
+      <button type="submit" class="talk-submit" id="talk-submit-btn">
+        <span class="talk-submit-label">Send it over</span>
+        <span class="talk-submit-spinner" aria-hidden="true"></span>
+      </button>
+      <p class="talk-note" id="talk-note">That's in. Expect a reply within a day or two.</p>
+    </form>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------------- let's talk modal (wired first, on its own, ---------------- */
+  /* so a problem anywhere else on the page can never break the send button) */
+  try{
+    var talkModal = document.getElementById('talk-modal');
+    var talkOpenBtn = document.getElementById('talk-open-btn');
+    var talkCloseBtn = document.getElementById('talk-close-btn');
+    var talkForm = document.getElementById('talk-form');
+    var talkNote = document.getElementById('talk-note');
+    var talkSubmitBtn = document.getElementById('talk-submit-btn');
+    var lastFocused = null;
+
+    var openTalk = function(){
+      lastFocused = document.activeElement;
+      talkModal.classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+      var firstField = document.getElementById('talk-first-name');
+      if(firstField) setTimeout(function(){ firstField.focus(); }, 300);
+    };
+
+    var closeTalk = function(){
+      talkModal.classList.remove('is-open');
+      document.body.style.overflow = '';
+      if(lastFocused && lastFocused.focus) lastFocused.focus();
+    };
+
+    if(talkOpenBtn) talkOpenBtn.addEventListener('click', openTalk);
+    if(talkCloseBtn) talkCloseBtn.addEventListener('click', closeTalk);
+
+    if(talkModal){
+      talkModal.addEventListener('click', function(e){
+        if(e.target === talkModal) closeTalk();
+      });
+    }
+
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape' && talkModal.classList.contains('is-open')) closeTalk();
+    });
+
+    if(talkForm){
+      talkForm.addEventListener('submit', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        if(talkSubmitBtn.classList.contains('is-loading')) return false;
+
+        talkSubmitBtn.classList.add('is-loading');
+
+        setTimeout(function(){
+          talkSubmitBtn.classList.remove('is-loading');
+          talkNote.classList.add('is-visible');
+          talkForm.reset();
+          setTimeout(function(){
+            closeTalk();
+            talkNote.classList.remove('is-visible');
+          }, 1600);
+        }, 1100);
+
+        return false;
+      });
+    }
+  }catch(talkErr){
+    if(window.console && console.error) console.error('Talk modal setup failed:', talkErr);
+  }
+
+  /* ---------------- scroll reveal ---------------- */
+  var revealEls = document.querySelectorAll('.reveal');
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          entry.target.classList.add('in-view');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold:0.15, rootMargin:'0px 0px -8% 0px' });
+    revealEls.forEach(function(el){ io.observe(el); });
+  } else {
+    revealEls.forEach(function(el){ el.classList.add('in-view'); });
+  }
+
+  /* ---------------- MZ particle mark ---------------- */
+  try{
+  var canvas = document.getElementById('mz-canvas');
+  var ctx = canvas.getContext('2d');
+  var stage = canvas.parentElement;
+  var DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+  var particles = [];
+  var dustParticles = [];
+  var connections = [];
+  var W = 0, H = 0;
+  var mouse = { x:0, y:0, tx:0, ty:0 };
+  var t0 = performance.now();
+  var glowPhase = Math.random()*Math.PI*2;
+
+  function sizeCanvas(){
+    var rect = stage.getBoundingClientRect();
+    W = rect.width;
+    H = rect.height;
+    canvas.width = W * DPR;
+    canvas.height = H * DPR;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+
+  function buildPoints(){
+    var sampleW = Math.round(W);
+    var sampleH = Math.round(H);
+    if(sampleW < 10 || sampleH < 10) return;
+
+    var off = document.createElement('canvas');
+    off.width = sampleW;
+    off.height = sampleH;
+    var octx = off.getContext('2d');
+    octx.clearRect(0,0,sampleW,sampleH);
+    octx.fillStyle = '#fff';
+
+    // MZ monogram mark: a vector path (Path2D) instead of rendered text.
+    // Traced and thickened (~24%) from the reference logo artwork -
+    // a single fused M+Z glyph with sharp diagonals and squared-off
+    // geometric corners. Coordinate space is 1124 x 1000 units.
+    var mzPath = new Path2D('M0,2 L0,1000 L166,1000 L168,260 L530,622 L564,622 L922,264 L922,346 L332,968 L332,1000 L994,1000 L1124,868 L1124,836 L684,834 L1088,422 L1088,0 L940,0 L550,396 L154,0 Z');
+    var logoH = sampleH * 0.72; // same overall size as the old fontSize
+    var logoW = logoH * (1124 / 1000);
+    var logoScale = logoH / 1000;
+    octx.save();
+    octx.translate(sampleW/2 - logoW/2, sampleH/2 - logoH/2);
+    octx.scale(logoScale, logoScale);
+    octx.fill(mzPath);
+    octx.restore();
+
+    var data;
+    try{
+      data = octx.getImageData(0,0,sampleW,sampleH).data;
+    }catch(e){
+      data = null;
+    }
+
+    particles = [];
+    var isMobile = window.innerWidth < 640;
+    var step = isMobile ? 5 : 3.4;
+
+    if(data){
+      for(var y=0; y<sampleH; y+=step){
+        for(var x=0; x<sampleW; x+=step){
+          var idx = (Math.floor(y)*sampleW + Math.floor(x)) * 4 + 3;
+          if(data[idx] > 120){
+            var jitter = (Math.random()-0.5) * step * 0.9;
+            var jitterY = (Math.random()-0.5) * step * 0.9;
+            var isAccent = Math.random() < 0.06;
+            var ox = x + jitter, oy = y + jitterY;
+
+            // scatter start point: fly in from a random spot outside the mark,
+            // a different burst every time the page loads
+            var ang = Math.random()*Math.PI*2;
+            var dist = (Math.max(sampleW,sampleH)*0.55) + Math.random()*sampleW*0.6;
+            var sx = ox + Math.cos(ang)*dist;
+            var sy = oy + Math.sin(ang)*dist;
+
+            particles.push({
+              ox: ox,
+              oy: oy,
+              sx: sx,
+              sy: sy,
+              x: ox,
+              y: oy,
+              z: 0.35 + Math.random()*0.9,
+              r: isAccent ? (0.9 + Math.random()*1.1) : (0.6 + Math.random()*1.0),
+              phase: Math.random()*Math.PI*2,
+              speed: 0.4 + Math.random()*0.7,
+              accent: isAccent,
+              // stagger: particles further from center settle in slightly later
+              delay: Math.random()*0.35 + (dist/(sampleW+sampleH)) * 0.5,
+              dur: 1.1 + Math.random()*0.7
+            });
+          }
+        }
+      }
+    }
+
+    dustParticles = [];
+    var dustCount = isMobile ? 60 : 140;
+    for(var i=0;i<dustCount;i++){
+      dustParticles.push({
+        x: Math.random()*sampleW,
+        y: Math.random()*sampleH,
+        r: 0.4 + Math.random()*0.8,
+        z: 0.15 + Math.random()*0.6,
+        phase: Math.random()*Math.PI*2,
+        speed: 0.2 + Math.random()*0.4,
+        drift: (Math.random()-0.5)*0.3
+      });
+    }
+
+    // constellation lines: connect each accent particle to its nearest
+    // neighbor so the mark reads like a faint circuit / node network
+    connections = [];
+    var maxLinkDist = Math.max(sampleW,sampleH) * 0.045 + 12;
+    for(var a=0; a<particles.length; a++){
+      var pa = particles[a];
+      if(!pa.accent) continue;
+      var bestP = null, bestD = maxLinkDist;
+      for(var b=0; b<particles.length; b++){
+        if(a === b) continue;
+        var pb = particles[b];
+        var dx = pa.ox - pb.ox, dy = pa.oy - pb.oy;
+        var d = Math.sqrt(dx*dx + dy*dy);
+        if(d < bestD){ bestD = d; bestP = pb; }
+      }
+      if(bestP){
+        connections.push({ a:pa, b:bestP, phase:Math.random()*Math.PI*2, speed:0.3+Math.random()*0.4 });
+      }
+    }
+  }
+
+  function draw(now){
+    var elapsed = (now - t0) / 1000;
+    ctx.clearRect(0,0,W,H);
+
+    mouse.x += (mouse.tx - mouse.x) * 0.06;
+    mouse.y += (mouse.ty - mouse.y) * 0.06;
+
+    // soft ambient bloom breathing behind the mark for a bit of presence
+    var breathe = 0.5 + 0.5*Math.sin(elapsed*0.45 + glowPhase);
+    var glowR = Math.min(W,H) * (0.42 + 0.03*breathe);
+    var glow = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, glowR);
+    glow.addColorStop(0, 'rgba(243,243,238,' + (0.05 + 0.035*breathe).toFixed(3) + ')');
+    glow.addColorStop(1, 'rgba(243,243,238,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0,0,W,H);
+
+    // ambient dust behind the mark
+    for(var d=0; d<dustParticles.length; d++){
+      var dp = dustParticles[d];
+      var dpx = dp.x + Math.sin(elapsed*dp.speed + dp.phase) * 6 + mouse.x * dp.z * 10;
+      var dpy = dp.y + Math.cos(elapsed*dp.speed*0.8 + dp.phase) * 4 + mouse.y * dp.z * 6 + elapsed*dp.drift*4 % H;
+      var dAlpha = 0.05 + 0.05 * (0.5 + 0.5*Math.sin(elapsed*1.3 + dp.phase));
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(243,243,238,' + dAlpha.toFixed(3) + ')';
+      ctx.arc(((dpy%H)+H)%H === dpy ? dpx : dpx, dpy, dp.r, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    for(var i=0;i<particles.length;i++){
+      var p = particles[i];
+      var flick = Math.sin(elapsed*1.6*p.speed + p.phase);
+
+      // entrance: fly in from the scatter point (sx,sy) to the resting point (ox,oy)
+      var t = (elapsed - p.delay) / p.dur;
+      if(t < 0) t = 0; else if(t > 1) t = 1;
+      var ease = 1 - Math.pow(1 - t, 3); // easeOutCubic
+      var baseX = p.sx + (p.ox - p.sx) * ease;
+      var baseY = p.sy + (p.oy - p.sy) * ease;
+
+      var wobble = ease; // idle wobble ramps in as the particle settles
+      var px = baseX + Math.sin(elapsed*p.speed + p.phase) * (1.1*p.z) * wobble + mouse.x * p.z * 16 * ease;
+      var py = baseY + Math.cos(elapsed*p.speed*0.9 + p.phase) * (1.1*p.z) * wobble + mouse.y * p.z * 12 * ease;
+      var alpha = p.accent ? (0.55 + 0.35*flick) : (0.5 + 0.4*flick);
+      alpha *= (0.5 + p.z*0.5);
+      alpha *= (0.15 + 0.85*ease); // fade in during entrance
+
+      // remember current position/ease so the constellation lines can follow
+      p.cx = px; p.cy = py; p.ease = ease;
+
+      if(p.accent){
+        ctx.save();
+        ctx.shadowColor = 'rgba(243,243,238,' + Math.min(0.85, alpha).toFixed(3) + ')';
+        ctx.shadowBlur = (3 + 3.5*p.z) * (0.3 + 0.7*ease);
+      }
+      ctx.beginPath();
+      ctx.fillStyle = p.accent
+        ? 'rgba(243,243,238,' + Math.min(1, alpha * 1.4).toFixed(3) + ')'
+        : 'rgba(243,243,238,' + alpha.toFixed(3) + ')';
+      ctx.arc(px, py, p.r * (0.85 + p.z*0.3), 0, Math.PI*2);
+      ctx.fill();
+      if(p.accent) ctx.restore();
+    }
+
+    // faint constellation lines linking the accent sparks, like a quiet circuit
+    for(var c=0; c<connections.length; c++){
+      var conn = connections[c];
+      var linkEase = Math.min(conn.a.ease, conn.b.ease);
+      if(linkEase < 0.5) continue;
+      var fade = (linkEase - 0.5) / 0.5;
+      var pulse = 0.5 + 0.5*Math.sin(elapsed*conn.speed + conn.phase);
+      var lineAlpha = 0.05 + 0.09*pulse;
+      lineAlpha *= fade;
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(243,243,238,' + lineAlpha.toFixed(3) + ')';
+      ctx.lineWidth = 0.6;
+      ctx.moveTo(conn.a.cx, conn.a.cy);
+      ctx.lineTo(conn.b.cx, conn.b.cy);
+      ctx.stroke();
+    }
+
+    rafId = requestAnimationFrame(draw);
+  }
+
+  function drawStatic(){
+    ctx.clearRect(0,0,W,H);
+
+    var glow = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.min(W,H)*0.44);
+    glow.addColorStop(0, 'rgba(243,243,238,0.07)');
+    glow.addColorStop(1, 'rgba(243,243,238,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0,0,W,H);
+
+    for(var d=0; d<dustParticles.length; d++){
+      var dp = dustParticles[d];
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(243,243,238,0.08)';
+      ctx.arc(dp.x, dp.y, dp.r, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    for(var c=0; c<connections.length; c++){
+      var conn = connections[c];
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(243,243,238,0.1)';
+      ctx.lineWidth = 0.6;
+      ctx.moveTo(conn.a.ox, conn.a.oy);
+      ctx.lineTo(conn.b.ox, conn.b.oy);
+      ctx.stroke();
+    }
+
+    for(var i=0;i<particles.length;i++){
+      var p = particles[i];
+      if(p.accent){
+        ctx.save();
+        ctx.shadowColor = 'rgba(243,243,238,0.8)';
+        ctx.shadowBlur = 3 + 3.5*p.z;
+      }
+      ctx.beginPath();
+      ctx.fillStyle = p.accent ? 'rgba(243,243,238,0.9)' : 'rgba(243,243,238,0.72)';
+      ctx.arc(p.ox, p.oy, p.r, 0, Math.PI*2);
+      ctx.fill();
+      if(p.accent) ctx.restore();
+    }
+  }
+
+  var rafId = null;
+  var resizeTimer = null;
+
+  function init(){
+    sizeCanvas();
+    buildPoints();
+    if(rafId) cancelAnimationFrame(rafId);
+    if(reduceMotion){
+      drawStatic();
+    } else {
+      t0 = performance.now();
+      rafId = requestAnimationFrame(draw);
+    }
+  }
+
+  var lastWidth = window.innerWidth;
+  window.addEventListener('resize', function(){
+    // on mobile, scrolling shows/hides the address bar which only changes the
+    // viewport HEIGHT and fires a resize event too, ignore that so the logo
+    // doesn't replay its entrance every time the user scrolls
+    var newWidth = window.innerWidth;
+    if(newWidth === lastWidth) return;
+    lastWidth = newWidth;
+
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(init, 180);
+  });
+
+  stage.addEventListener('mousemove', function(e){
+    var rect = stage.getBoundingClientRect();
+    mouse.tx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+    mouse.ty = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+  });
+  stage.addEventListener('mouseleave', function(){
+    mouse.tx = 0;
+    mouse.ty = 0;
+  });
+
+  if(document.fonts && document.fonts.ready){
+    document.fonts.load('900 100px Anton').then(function(){
+      return document.fonts.ready;
+    }).then(init).catch(init);
+  } else {
+    window.addEventListener('load', init);
+  }
+
+  // fallback in case font takes long
+  setTimeout(function(){
+    if(particles.length === 0) init();
+  }, 900);
+
+  }catch(mzErr){
+    if(window.console && console.error) console.error('MZ particle mark setup failed:', mzErr);
+  }
+
+})();
+</script>
+
+</body>
+</html>
